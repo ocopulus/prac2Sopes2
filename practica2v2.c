@@ -79,7 +79,6 @@ long minimo(int *lista, int tam){
 }
 
 long mediana(int *lista, int tam, int *aux){
-    int bandera = 0;
     int contador = 0;
     for(contador = 0; contador < tam; contador++){
         aux[contador] = 0;
@@ -87,29 +86,62 @@ long mediana(int *lista, int tam, int *aux){
     for(contador = 0; contador < tam; contador++){
         aux[contador] = lista[contador];
     }
-    for(contador = tam; contador > 0 && bandera == 0; contador--){
-        bandera = 1;
+    for(contador = 1; contador < tam; contador++){
         int contador2 = 0;
-        for (contador2 = 0; contador2 < contador; contador++)
+        for (contador2 = 0; contador2 < tam - 1; contador2++)
         {
             if(aux[contador2]>aux[contador2+1]){
-                int numero = aux[contador2];
-                aux[contador2] = aux[contador2+1];
-                aux[contador2+1] = numero;
-                bandera = 0;
+                int numero = aux[contador2+1];
+                aux[contador2+1] = aux[contador2];
+                aux[contador2] = numero;
             }
         }
     }
-
+    for(contador = 0; contador < tam; contador++){
+        printk("Val Ordnenado: %d\n", aux[contador]);
+    }
     if(tam % 2 == 0){
-        int index = (tam / 2) + 1;
+        int index = (tam / 2);
         int val1 = aux[index];
-        int val2 = aux[index+1];
+        int val2 = aux[index-1];
         return (val1 + val2)/2;
     } else {
-        int index = (tam / 2) + 1;
+        int index = (tam / 2);
         return aux[index];
     }
+}
+
+long varianza(int *lista, int tam){
+    int ValMedia = media(lista, tam);
+    int index = 0;
+    int sum = 0;
+    for(index = 0; index < tam; index++){
+        sum = sum + (lista[index] - ValMedia) * (lista[index] - ValMedia);
+    }
+    int salida = sum / tam;
+    return salida;
+}
+
+long sqrt(long x) {
+        // Start typing your C/C++ solution below
+        // DO NOT write int main() function
+        if(x<0) return -1;
+        long long x1=(long long)x;
+        long long left=0;
+        long long right=x1;
+        long long mid=0;
+        while(left<=right){
+            mid=left+(right-left)/2;
+            if(mid*mid==x1||(mid*mid<x1&&(mid+1)*(mid+1)>x1)) return (int)mid;
+            else if(mid*mid<x1) left=mid+1;
+            else right=mid-1;
+        }
+}
+
+long desviacionEstandar(int *lista, int tam){
+    int ValVarianza = varianza(lista, tam);
+    int salida = sqrt(ValVarianza);
+    return salida;
 }
 
 int init_module(void)
@@ -117,7 +149,7 @@ int init_module(void)
     // Create variables
     struct file *f;
     char buf[128];
-    char buf2[128];
+    char buf2[200];
     int lista [128];
     int aux [128];
     int cantidad = 0;
@@ -211,12 +243,33 @@ int init_module(void)
 
     long ValMediana = mediana(lista, cantidad, aux);
     printk("El Valor de la Mediana es: %d\n", ValMediana);
-    /*parsear(buf);
+
+    long ValVarianza = varianza(lista, cantidad);
+    printk("El Valor de la varianza es: %d\n", ValVarianza);
+
+    long ValDes = desviacionEstandar(lista, cantidad);
+    printk("El Valor del la Desviacion Estandar es: %d\n", ValDes);
+    sprintf(buf2,"{\"Nombre\":\"Juan Jose Lemus V.\",\n\"carne\":201404412, \n\"resultados\":{\n\t\"Media\": %d,\n",Valmedia);
+    char temp [500];
+    sprintf(temp, "\t\"Mediana\": %d,\n", ValMediana);
+    strcat(buf2, temp);
+    sprintf(temp, "\t\"Moda\": %d,\n", Valmoda);
+    strcat(buf2, temp);
+    sprintf(temp, "\t\"Maximo\": %d,\n", ValMaximo);
+    strcat(buf2, temp);
+    sprintf(temp, "\t\"Minimo\": %d,\n", ValMinimo);
+    strcat(buf2, temp);
+    sprintf(temp, "\t\"Varianza\": %d,\n", ValVarianza);
+    strcat(buf2, temp);
+    sprintf(temp, "\t\"Desviacion Estandar\": %d,\t\n}\n}", ValDes);
+    strcat(buf2, temp);
+    escribir("/statistics/salida.JSON", buf2);
+    /*parsear(buf)
     printk("Voy a escribir");
     escribir("/statistics/salida.JSON", buf);
     printk("Ya escribi papu");*/
     return 0;
-}
+}   
 
 void cleanup_module(void)
 {
